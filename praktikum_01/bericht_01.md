@@ -1,6 +1,6 @@
 # BDA, Praktikumsbericht 1
 
-Gruppe: Alexander Kniesz, Maximilian Neudert, Oskar Rudolf
+Gruppe mi6xc: Alexander Kniesz, Maximilian Neudert, Oskar Rudolf
 
 ---
 
@@ -85,3 +85,19 @@ Es existieren Merkmale mit fehlenden Werten, zum Beispiel das Jahr, welches eine
 Für die Anzahl an Datensätzen pro Jahr kann man die TrackIDs pro Jahr zählen lassen.
 
 ![image](res/count_per_year.png)
+
+## Aufgabe 3
+
+### a)
+
+Für das Binning haben wir 10 bins gewählt, diese mit PySpark erstellt und und exemplarisch die Tabelle zeigen lassen. Wir haben festgestellt, dass der Bucketizer binning betreibt, indem dieser eine Spalte hinzufügt, in der die Zuordnung zu einem bin steht.
+
+![image](res/df_b.png)
+
+Gespeichert haben wir die Tabelle dann als `mi6xc_bucketeddata` und zur Sicherheit den Speichervorgang überprüft.
+
+![image](res/bdata_table.png)
+
+Anschließend haben wir die Pivotierung durchgeführt.
+
+![image](res/piv_df.png)

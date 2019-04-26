@@ -2,7 +2,7 @@
 
 Wir haben die Joins nach folgendem Schema durchgeführt:
 
-![image](join.png)
+![image](res/join.png)
 
 Beide Joins wurden über die Track Id durchgeführt:
 
@@ -18,11 +18,11 @@ Die Daten werden von Tableau in zwei Kategorien eingeteilt: Dimensionen und Maß
 
 Obwohl es in Tableau möglich ist, sich fehlende Werte anzeigen zu lassen (z.B. über die folgende Darstellung), handelt es sich bei dem Tool eher um ein Visualisierungstool und die Analyse von Missings müsste für jede Variable einzeln mittels Grafik durchgeführt werden.
 
-![image](missings_example.png)
+![image](res/missings_example.png)
 
 Für eine schnellere Analyse der Missing-Data haben wir uns mittels R einen schnellen Überblick verschafft:
 
-``` {r eval=FALSE}
+```{r eval=FALSE}
 require(data.table)
 
 missing_names <- c("Variable","NA_count","empty_string_count", "0_count" )
@@ -81,9 +81,9 @@ In Prozent:
 
 ###### Weitere Fragestellungen:
 
->1. Woher kommen die meisten Künstler?
->2. Sind die Lieder im Laufe der Zeit kürzer oder länger geworden?
->3. Sind schnelle Songs beliebter als langsame Songs?
+> 1.  Woher kommen die meisten Künstler?
+> 2.  Sind die Lieder im Laufe der Zeit kürzer oder länger geworden?
+> 3.  Sind schnelle Songs beliebter als langsame Songs?
 
 Zu 1.)
 
@@ -104,4 +104,3 @@ Leider lässt sich die Frage nur schwer beantworten. Es scheint logisch, dass we
 ![hotness](question3.png)
 
 #### Aufgabe 3
-

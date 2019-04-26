@@ -81,7 +81,7 @@ Beide Joins wurden über die Track Id durchgeführt:
 
 ### b)
 
-#### Skalierung:
+#### Skalierung
 
 Die Daten werden von Tableau in zwei Kategorien eingeteilt: Dimensionen und Maßzahlen. Innerhalb der Variablen der Dimensions-Kategorie sind die kategorialen Merkmale (qualitativen), nach denen sich z.B. gut aggregieren lässt. Bei den Maßzahlen handelt es sich um metrisch Skalierte (quantitative) Variablen.
 
@@ -144,7 +144,7 @@ Nach herausfiltern der "überflüssigen" Nullwerte (Jahr==0) sind wir auf folgen
 
 Insgesamt:
 
-![yearsTotal](res/yearsTotal.PNG)
+![yearsTotal](res/yearsTotal.png)
 
 In Prozent:
 
@@ -189,3 +189,7 @@ Gespeichert haben wir die Tabelle dann als `mi6xc_bucketeddata` und zur Sicherhe
 Anschließend haben wir die Pivotierung durchgeführt.
 
 ![image](res/piv_df.png)
+
+## Aufgabe 4/5
+
+Werden nachbereitet. Sind für den Bericht aufgrund diverser Probleme nicht rechtzeitig fertig geworden.

@@ -4,6 +4,11 @@ Gruppe mi6xc: Alexander Kniesz, Maximilian Neudert, Oskar Rudolf
 
 ---
 
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({ tex2jax: {inlineMath: [['$', '$']]}, messageStyle: "none" });
+</script>
+
 ## Aufgabe 1
 
 Zuerst haben wir ein gemeinsames Notebook [bericht1](https://141.100.62.87:7070/#/notebook/2EB5CTTRT) auf Zeppelin mit Ownern aller Gruppenmitgliedern erstellt, auf dem wir gemeinsam arbeiten können.
@@ -176,8 +181,6 @@ Leider lässt sich die Frage nur schwer beantworten. Es scheint logisch, dass we
 
 ## Aufgabe 3
 
-### a)
-
 Für das Binning haben wir 10 bins gewählt, diese mit PySpark erstellt und und exemplarisch die Tabelle zeigen lassen. Wir haben festgestellt, dass der Bucketizer binning betreibt, indem dieser eine Spalte hinzufügt, in der die Zuordnung zu einem bin steht.
 
 ![image](res/df_b.png)
@@ -193,7 +196,13 @@ Anschließend haben wir die Pivotierung mittels Aggregation über die Anzahl dur
 ## Aufgabe 4
 
 Die einzelnen bins enthalten nun die relative Häufigkeit der einzelnen loudness Segmente. Zur Sichtung kann man diese als Spalte nehmen und über die `track_id` auftragen.
-Wir habe eine Spalte `score` erstellt, die einen loudness score berechnet $bin_1 + 2 \cdot bin_2 + 3 \cdot bin_3 + \dots + 8 \cdot bin_8$, dieser gibt einen Wert wieder mit welchem sich der Anteil an lauten Segmenten vergleichen lässt.
+Wir habe eine Spalte `score` erstellt, die einen loudness score berechnet
+
+$$
+bin_1 + 2 \cdot bin_2 + 3 \cdot bin_3 + \dots + 8 \cdot bin_8
+$$
+
+dieser gibt einen Wert wieder mit welchem sich der Anteil an lauten Segmenten vergleichen lässt.
 
 ![image](res/t_pvec.png)
 
@@ -202,7 +211,7 @@ Wenn wir nun über den score absteigend sortieren finden wir laute songs, aufste
 ![image](res/t_loud.png)
 ![image](res/t_soft.png)
 
-Da die Millon Song Daten unter anderem von Spotify generiert sind, kann man nun die Titel und die Interpreten aus der Datenbank auslesen und die Songs mittels Spotify auf ihre Lautstärke akustisch überprüfen.
+Da die Million Song Daten unter anderem von Spotify generiert sind, kann man nun die Titel und die Interpreten aus der Datenbank auslesen und die Songs mittels Spotify auf ihre Lautstärke akustisch überprüfen.
 
 ![image](res/loud_soft.png)
 

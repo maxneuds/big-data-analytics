@@ -186,10 +186,43 @@ Gespeichert haben wir die Tabelle dann als `mi6xc_bucketeddata` und zur Sicherhe
 
 ![image](res/bdata_table.png)
 
-Anschließend haben wir die Pivotierung durchgeführt.
+Anschließend haben wir die Pivotierung mittels Aggregation über die Anzahl durchgeführt und die Spalten danach in eine relative Maßzahl umgewandelt, was uns die Profil-Vektoren gibt.
 
 ![image](res/piv_df.png)
 
-## Aufgabe 4/5
+## Aufgabe 4
 
-Werden nachbereitet. Sind für den Bericht aufgrund diverser Probleme nicht rechtzeitig fertig geworden.
+Die einzelnen bins enthalten nun die relative Häufigkeit der einzelnen loudness Segmente. Zur Sichtung kann man diese als Spalte nehmen und über die `track_id` auftragen.
+Wir habe eine Spalte `score` erstellt, die einen loudness score berechnet $bin_1 + 2 \cdot bin_2 + 3 \cdot bin_3 + \dots + 8 \cdot bin_8$, dieser gibt einen Wert wieder mit welchem sich der Anteil an lauten Segmenten vergleichen lässt.
+
+![image](res/t_pvec.png)
+
+Wenn wir nun über den score absteigend sortieren finden wir laute songs, aufsteigend leise songs.
+
+![image](res/t_loud.png)
+![image](res/t_soft.png)
+
+Da die Millon Song Daten unter anderem von Spotify generiert sind, kann man nun die Titel und die Interpreten aus der Datenbank auslesen und die Songs mittels Spotify auf ihre Lautstärke akustisch überprüfen.
+
+![image](res/loud_soft.png)
+
+Loudness war sei dank war es schwieriger in Spotify eines der soften Songs zu finden. Verglichen haben wir dann akustisch:
+
+Asure - 'Ugly MF'
+gegen
+James Horner - 'The President's Speech - Instrumental'
+
+Das Ergebnis war deutlich. 'Ugly MF' hat so hohe Loudness, dass die Musik stark übersteuert klingt. Das andere Lied war sehr leise, ruhig und die loudness deutlich geringer, so dass es auch zu keiner digitalen Übersteuerung kam.
+
+## Aufgabe 5
+
+Bins fester Breite lohnen sich, wenn man Informationen zur Verteilung gewinnen möchte. In diesem konkreten Fall für Aufgabe 4 war es durchaus sehr hilfreich, dass die bins in fester Breite erstellt wurden, um zwischen soften und lauten Songs zu unterscheiden.
+Bins fester Breite sind nicht unbedingt zur verteilten Berechnung gut geeignet. Zur verteilten Berechnung sind gleichstark gefüllte Bins zu bevorzugen, dies kann bei fester Bereite bereits schon passieren, wäre aber nur Zufall.
+
+Wenn wir uns die Verteilung der `timbre_0` anschauen, dann stellen wir fest, dass Bins fester Breite zur verteilten Berechnung nicht sinnvoll siind.
+
+![image](res/equal_bins_hist.png)
+
+Nutzen wir approximative Quantile, dann erhalten wir folgendes Binning (für 10% Quantile):
+
+![image](res/aq_bins_hist.png)

@@ -196,32 +196,44 @@ Anschließend haben wir die Pivotierung mittels Aggregation über die Anzahl dur
 ## Aufgabe 4
 
 Die einzelnen bins enthalten nun die relative Häufigkeit der einzelnen loudness Segmente. Zur Sichtung kann man diese als Spalte nehmen und über die `track_id` auftragen.
-Wir habe eine Spalte `score` erstellt, die einen loudness score berechnet
+Wir habe eine Spalte `score` in Tableau erstellt, die einen loudness score nach folgender Formel berechnet:
 
 $$
-bin_1 + 2 \cdot bin_2 + 3 \cdot bin_3 + \dots + 8 \cdot bin_8
+score = 1 \cdot bin_1 + 2 \cdot bin_2 + 3 \cdot bin_3 + \dots + 8 \cdot bin_8
 $$
 
-dieser gibt einen Wert wieder mit welchem sich der Anteil an lauten Segmenten vergleichen lässt.
+Der errechnete Score gibt einen Wert wieder, mit welchem sich der Anteil an lauten Segmenten vergleichen lässt. Die Faktoren bei der Berechnung dienen als Gewichte, sodass $bin_1$ als "leistestem" Bin das kleinste Gewicht und $bin_8$ als "lautestem" Bin das größte Gewicht zugeordnet wird.
 
 ![image](res/t_pvec.png)
 
-Wenn wir nun über den score absteigend sortieren finden wir laute songs, aufsteigend leise songs.
+Wenn wir nun über den score absteigend sortieren, finden wir laute Songs. Sortieren wir aufsteigend, so finden wir leise Songs.
 
 ![image](res/t_loud.png)
 ![image](res/t_soft.png)
 
-Da die Million Song Daten unter anderem von Spotify generiert sind, kann man nun die Titel und die Interpreten aus der Datenbank auslesen und die Songs mittels Spotify auf ihre Lautstärke akustisch überprüfen.
+Da die Songs nach unserem Wissensstand von unterschiedlichen Plattformen stammen und daher einen unterschiedlichen "replay gain" haben können, bietet es sich an, Spotify für einen akustischen Vergleich heranzuziehen. Einige Songs lassen sich problemlos auf Spotify finden. Der Webplayer von Spotify nutzt nach Aussagen der FAQ keine "loudness normalization", wodurch eine vernünftige Testumgebung zum Hörvergleich gegeben ist.
+
+Im Folgenden haben wir also mittels pySpark einen lauten und einen leisen Tracks identifiziert...
 
 ![image](res/loud_soft.png)
 
-Loudness war sei dank war es schwieriger in Spotify eines der soften Songs zu finden. Verglichen haben wir dann akustisch:
+... und die Lieder anschließend in Spotify "akustisch" verglichen:
 
-Asure - 'Ugly MF'
-gegen
-James Horner - 'The President's Speech - Instrumental'
+> (laut) Asure - 'Ugly MF'
+>
+> gegen
+>
+> (leise) James Horner - 'The President's Speech - Instrumental'
 
-Das Ergebnis war deutlich. 'Ugly MF' hat so hohe Loudness, dass die Musik stark übersteuert klingt. Das andere Lied war sehr leise, ruhig und die loudness deutlich geringer, so dass es auch zu keiner digitalen Übersteuerung kam.
+Hier sind auch die entsprechenden YouTube-Links: (auf YouTube ist aber zu beachten, dass die Laustärke auch von der Songqualität der hochgeladenen Datei abhängen kann.)
+
+>(laut) https://www.youtube.com/watch?v=2RGNj54j5s8
+>
+>(leise) https://www.youtube.com/watch?v=48a_nR5Xnlw
+
+Das Ergebnis war deutlich. 'Ugly MF' hat so hohe Loudness, dass die Musik stark übersteuert klingt. Das andere Lied dagegen klingt sehr leise und ruhig, sodass es auch zu keiner digitalen Übersteuerung kam. Unser Ergebnis spiegelt sich auch in den Metadaten wieder:
+
+![image](res/loudest_query.png)
 
 ## Aufgabe 5
 

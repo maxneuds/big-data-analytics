@@ -24,3 +24,23 @@ Anschließend haben wir mittels `split` die Strings in den Zeilen in Wörter Arr
 <div style="page-break-after: always;"></div>
 
 ## Aufgabe 2
+
+Wir verbinden uns mittels ssh auf:
+
+```bash
+141.100.62.87
+```
+
+dort haben wir eine `tmux` session mittels
+
+```bash
+tmux -S /tmp/smux new -s amo
+```
+
+erstellt, auf die wir uns dann mittels
+
+```bash
+tmux -S /tmp/smux attach -t amo
+```
+
+gemeinsam verbinden und mit netcat arbeiten können.

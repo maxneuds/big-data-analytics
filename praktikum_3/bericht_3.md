@@ -44,3 +44,11 @@ tmux -S /tmp/smux attach -t amo
 ```
 
 gemeinsam verbinden und mit netcat arbeiten können.
+
+### unterschiede in den Parameters
+
+Bei Output unterscheidet man zwischen folgenden Parameters:
+
+- **append**: Nur neue Zeilen werden in den Output geschrieben. Exklusiv für de Verwendung ohne Aggregationen.
+- **complete**: Alle Zeilen werden jedes mal in den Output geschrieben. Exklusiv für die Verwendung mit Aggregationen.
+- **update**: Nur veränderte Zeilen werden in den Output geschrieben. Ohne Aggregation wie **append**.

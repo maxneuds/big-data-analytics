@@ -45,10 +45,25 @@ tmux -S /tmp/smux attach -t amo
 
 gemeinsam verbinden und mit netcat arbeiten können.
 
+### Code
+
+![image](res/fig2-00)
+
 ### unterschiede in den Parameters
 
-Bei Output unterscheidet man zwischen folgenden Parameters:
+`outputMode` besitzt folgende Paramter:
 
 - **append**: Nur neue Zeilen werden in den Output geschrieben. Exklusiv für de Verwendung ohne Aggregationen.
 - **complete**: Alle Zeilen werden jedes mal in den Output geschrieben. Exklusiv für die Verwendung mit Aggregationen.
 - **update**: Nur veränderte Zeilen werden in den Output geschrieben. Ohne Aggregation wie **append**.
+
+und `format` besitzt unter anderem folgende Parameter:
+
+- **console**: Schreibt den verarbeiteten Stream in die Console sprich in den Standard Output.
+- **memory**: Schreibt den verarbeiteten Stream in eine in Memory Datenbank. Folglich für große Datenmengen eher ungeeignet.
+
+### Testergebnisse
+
+Wir haben die ersten 100 Wörter von Lorem Ipsum ein paar mal über `netcat` abgesendet und erhalten folgendes Ergebnis:
+
+![image](res/fig2-01)

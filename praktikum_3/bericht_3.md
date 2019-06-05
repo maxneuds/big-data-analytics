@@ -142,9 +142,19 @@ Man sieht, dass `order` und `root` in `Germany` deutlich öfter `404` sprich nic
 
 ### c)
 
-Zu den Unterschiedenlichen Ausgabemodi muss man zuerst daran denken, dass `append` generell nicht auf aggregierten Daten funktioniert und `update` nicht mit sortierung. Dies macht auch Sinn, weshalb wir die ersten beiden Aufgaben mit `complete` bearbeitet haben.
+Zu den Unterschiedenlichen Ausgabemodi muss man zuerst daran denken, dass `append` (ohne Watermarks) nicht auf aggregierten Daten funktioniert, `complete` nur auf aggregierten Daten funktioniert und `update` nicht mit Sortierung funktionier. Deshalb haben wir die ersten beiden Aufgaben mit `complete` bearbeitet.
 
-Im Falle von Late Data kann es nun passieren, dass alte Fenster von neuen Daten modifiziert werden. Dazu gibt es in Sparks `watermarks`, welche mit `.withWatermark("timestamp", "xx minutes")` definiert werden können und dann Datenpakete, die mit einer Verzögerung größer als die angegebene Zeit, direkt gedroppt werden.
+Late Data bedeutet, dass Daten mit einem späteren Eventzeitpunkt ankommen als deren Timestamp.
+Zur Bearbeitung von Late Data gibt es in Spark `watermarks`, welche mit `.withWatermark("timestamp", "threshold")` definiert werden können. Dabei ist `timestamp` die Eventzeit und `threshold` die maximale Zeit, die Daten zu spät sein dürfen (zum Beispiel `60 seconds`). Kommen nun Daten später an als der angegebene Threshold an, so werden diese nicht mehr für das Fenster aggregiert.
 
-Lässt man die Sortierung der Daten weg (ist für die Visualisierung eh nicht wirklich nötig), so können wir `update` als Alternative zu `complete` verwenden. Im Gegensatz zu `complete` aktualisiert `update` nur die neusten Zeilen. Dies ist mit Sliding Windows vollkommen in Ordnung, da wir keine Berechnungen auf alten Daten benötigen und wir somit die Performance verbessern können.
-Eine nennenswerte Veränderung ist nicht zu erwarten, außer es gäbe viele Late Data, dann würde man besonders in `a)` unterschiede sehen, da `complete` die späten Daten mit in die Berechnung einbeziehen würde, während `update` eben dies nicht tut.
+Arbeitet man mit Aggregation ohne Watermarks, so gibt es folgende Möglichkeiten für Late Data:
+
+- Complete: Es werden grundsätzlich alle Daten für die Output Sink mit einbezogen und entsprechend aktualisiert. Späte Daten werden damit auch verarbeitet, da alle Daten inklusive der späten Daten zum Triggerzeitpunkt aggregiert werden.
+- Update: Im Gegensatz zu Complete werden zum Triggerzeitpunkt alle neuen Daten zu den Alten aggregiert, somit auch späte Daten.
+
+Arbeitet man mit Aggregation und mit Watermarks, so gibt es folgende Möglichkeiten für Late Data (Complete ist nicht mehr sinnvoll, da für Complete alle Daten für die Output Sink zu erhalten sind, aber man mit Watermarks gerade zu späte Daten ignorieren möchte.):
+
+- Append: Zum Triggerzeitpunkt werden Daten noch bis zum Ende des angegebenen Delay Threshold gesammelt und dann gemeinsam zur Output Sink hinzugefügt. Alle Daten, die danach ankommen, werden ignoriert.
+- Update: Zu jedem Triggerzeitpunkt werden die Daten in der Output Sink aktualisiert. Daten, deren Timestamp noch innerhalb des angegebenen Thresholds liegen werden dazu mit einbezogen, während Daten, die außerhalb liegen ignoriert werden.
+
+Das heißt, dass die Output Sink mit Append später aktualisiert wird, dafür weniger Zeilenoperationen nötig sind und somit der Aufwand sinkt, während Update die Output Sink zu jedem Triggerzeitpunkt aktualisiert aber höheren Aufwand dafür besitzt.

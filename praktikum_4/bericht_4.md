@@ -11,7 +11,7 @@ Gruppe mi6xc: Alexander Kniesz, Maximilian Neudert, Oskar Rudolf
 
 ## Quellen
 
-Das PySpark Notebook findet man [hier](https://141.100.62.89:7070/#/notebook/2EFFKHFN5).
+Das PySpark Notebook findet man [hier](https://141.100.62.87:7070/#/notebook/2ED5PXGC4).
 
 ## Aufgabe 1
 
@@ -126,48 +126,231 @@ Nach Filtern & Zählen der Daten überprüften wir, ob soweit alles geklappt hat
 
 ## c)
 
-Zunächst prüfen wir wieder über ssh, ob wir als `Subscriber` die Taxidaten einsehen können:
+Zunächst prüfen wir wieder über ssh, ob wir als `Subscriber` die Taxidaten einsehen können. Dazu verbinden wir uns auf eine der Nodes führen
+
+```bash
+cd /opt/kafka/bin
+./kafka-console-consumer.sh \
+--bootstrap-server 141.100.62.85:9092 \
+--topic yellow_tripdata_2015_12 \
+--from-beginning
+```
+
+aus und erhalten:
 
 ![image](res/fig1_2_c.png)
 
-Das hat soweit geklappt. Jetzt übertragen wir diesen Stream auf Spark mit folgenden Optionen:
+Das hat soweit geklappt. Jetzt abonnieren wir diesen Stream mit Spark und folgenden Optionen:
 
-![image](res/fig2_2_c.png)
+```python
+# read text file
+df = spark \
+  .readStream \
+  .format("kafka") \
+  .option("kafka.bootstrap.servers", "141.100.62.88:9092") \
+  .option("subscribe", "yellow_tripdata_2015_12") \
+  .option("startingOffsets", "earliest") \
+  .option("kafkaConsumer.pollTimeoutMs", "8192") \
+  .option("maxOffsetsPerTrigger",1000000) \
+  .load()
+```
 
-Da die Datenpunkte hier zeilenweise als Strings in den Stream fließen, müssen wir die entsprechenden Zeilen, in denen die Daten wiederum kommasepariert sind, mit einem `split`-Befehl aufteilen. Da uns zunächst "nur" die Timestamps interessieren, selektieren wir hier nur das zweite Element aus dem gespliteten Datenpunkt. Anschließend nutzen wir aus, dass die Funktion `dayofmonth` auch String-Datentypen als input akzeptiert und wir mittels dieser Funktion wieder den Monatstag extrahieren können.  Damit die Wochentage übereinstimmen, wollen wir im Folgenden den Mittwoch, 1. Juli (`Data at Rest`) mit Mittwoch, dem 2. Dezember (`Data in Motion`) vergleichen. Dafür generieren wir eine zusätzliche Spalte mit versetztem "Day of Month". 
+Da die Datenpunkte hier zeilenweise als Strings in den Stream fließen, müssen wir die Zeilen, mit einem `split`-Befehl aufteilen.
+Da uns zunächst "nur" die Timestamps interessieren, wählen wir hier nur das zweite Element aus dem gespliteten Datenpunkt.
+Anschließend nutzen wir aus, dass die Funktion `dayofmonth` auch String-Datentypen als input akzeptiert und wir mittels dieser Funktion wieder den Monatstag extrahieren können.
+Damit die Wochentage übereinstimmen, wollen wir im Folgenden den Mittwoch, 1. Juli (`Data at Rest`) mit Mittwoch, dem 2. Dezember (`Data in Motion`) vergleichen. Dafür generieren wir eine zusätzliche Spalte mit versetztem "Day of Month".
 
-![image](res/fig4_2_c.png)
+```python
+# extract datetimes
+datetime_df = df\
+  .withColumn('datetimes', split(df.value, ",").getItem(1)) # 1. Item = tpep_pickup_datetime
 
-Jetzt können wir die Daten einfach wieder nach Monatstag (analog zu 2b) ) UND nach dem Window über die timestemps (mit size = 24 Studnen) aggregieren und zählen:
+datetime_df = datetime_df\
+  .withColumn('DayOfMonth', dayofmonth(datetime_df.datetimes))
 
-![image](res/fig5_2_c.png)
+datetime_df = datetime_df \
+  .withColumn("DayToJoin", datetime_df.DayOfMonth +1)
+```
+
+Jetzt können wir die Daten einfach wieder nach Monatstag (analog zu 2b) ) und mit einem Window über die timestemps (mit size = 24 Studnen) aggregieren und zählen:
+
+```python
+# count
+aggregated  = datetime_df \
+  .groupBy("DayOfMonth", window(datetime_df.timestamp,"24 hours"))\
+  .count() \
+  .orderBy("count", ascending=False)
+
+writer2 = aggregated \
+  .writeStream \
+  .queryName("mi6xc_taxi2") \
+  .outputMode("complete") \
+  .format("memory")
+
+query2 = writer2.start()
+```
+
+Damit erhalten wir zum als Output:
+
+![image](res/fig2c_00.png)
+![image](res/fig2c_01.png)
 
 ## d)
 
 Wir lesen für die Join-Operation zunächst die Juli-Daten wieder ein und führen dann mithilfe der entsprechenden SpakDataFrame-Methode einen InnerJoin durch:
 
-![image](res/fig1_2_d.png)
+```python
+# Sommerdaten
+juli_df  = spark.sql("select * from mi6xc_julidata")
 
-Die Aggregation funktioniert analog zu 2c). Hier müssen wir lediglich noch beachten, dass aufgrund des joins zwei DayOfMonth-Spalten existieren und wir deshalb die eindeutige Spalte "DayToJoin" als Gruppierungsvariable verwendet haben.
+# Join Operation
+all_data = datetime_df.join(juli_df, datetime_df.DayToJoin == juli_df.DayOfMonth)
+```
+
+Die Aggregation funktioniert analog zu 2c). Hier müssen wir lediglich noch beachten, dass aufgrund des joins zwei `DayOfMonth` Spalten existieren und wir deshalb die eindeutige Spalte `DayToJoin` als Gruppierungsvariable verwenden.
+Zusätzlich müssen wir die `count` Spalten entsprechend umbennen.
 
 ![image](res/fig3_2_d.png)
-![image](res/fig2_2_d.png)
+
+```python
+# Winterdaten
+datetime_df = df\
+  .withColumn('datetimes', split(df.value, ",").getItem(1))
+
+datetime_df = datetime_df\
+  .withColumn('DayOfMonth', dayofmonth(datetime_df.datetimes))
+
+datetime_df = datetime_df \
+  .withColumn("DayToJoin", datetime_df.DayOfMonth +1)
+
+df_count_dez  = datetime_df \
+  .groupBy("DayToJoin", window(datetime_df.timestamp,"24 hours"))\
+  .count() \
+  .orderBy("count", ascending=False) \
+  .selectExpr("count as count_dez", "DayToJoin as day")
+
+# Sommerdaten
+df_count_juli  = spark.sql("select * from mi6xc_julidata") \
+  .selectExpr("count as count_juli", "DayOfMonth as day")
+
+# Join Operation
+df_count_all = df_count_dez.join(df_count_juli, df_count_dez.day == df_count_juli.day)
+
+writer3 = df_count_all \
+  .writeStream \
+  .queryName("mi6xc_taxi3") \
+  .outputMode("complete") \
+  .format("memory")
+
+query3 = writer3.start()
+```
+
+und visualisieren das Ergebnis:
+
+![image](res/fig2d_00.png)
+
+Spontan liegt die Vermutung nahe, dass an wichtigen Feiertagen weniger Taxi gefahren wird. Denn sowohl der 4. Juli als auch Weihnachten sind wichtige Feiertage der USA und dort ist jeweils ein starker Einbruch verglichen zu beobachten.
 
 ## e)
 
-Das Vorgehen ist äquivalent zu 2d), allerdings müssen wir die entsprechenden Variablen von Interesse aus dem Input-Stream extrahieren und als Spalte in unseren SparkDataFrame hinzufügen:
+Das Vorgehen ist äquivalent zu `d)`, allerdings müssen wir die entsprechenden Variablen von Interesse aus dem Input-Stream extrahieren und als Spalte in unseren SparkDataFrame hinzufügen:
 
-![image](res/fig1_2_e.png)
+```python
+datetime_df = df\
+  .withColumn('trip_distance', split(df.value, ",").getItem(4)) # 4. Item = Trip_Distance
+```
 
 Anschließend können wir nach dieser Variablen gruppieren und alle möglichen gewünschten Aggregationsfunktionen darauf anwenden (wir haben `mean` angewendet)
 
-- avg
-- count
-- max
-- mean
-- min
-- sum
+- `avg`
+- `count`
+- `max`
+- `mean`
+- `min`
+- `sum`
 
-![image](res/fig2_2_e.png)
+```python
+%pyspark
+# Aufgabe 2e)
 
-**Anmerkung**: Leider konnten wir, bedingt durch den Umstand des (wahrscheinlich) überlasteten Clusters, keine Datenbereinigung auf den Daten durchführen.
+from pyspark.sql.functions import split
+from pyspark.sql.functions import window
+from pyspark.sql.functions import month, dayofmonth, col
+
+df = spark \
+  .readStream \
+  .format("kafka") \
+  .option("kafka.bootstrap.servers", "141.100.62.88:9092") \
+  .option("subscribe", "yellow_tripdata_2015_12") \
+  .option("startingOffsets", "earliest") \
+  .option("kafkaConsumer.pollTimeoutMs", "8192") \
+  .option("maxOffsetsPerTrigger",1000000) \
+  .load()
+
+# Winderdaten
+df_dez = df\
+  .withColumn('datetimes', split(df.value, ",").getItem(1)) \
+  .withColumn('trip_distance', split(df.value, ",").getItem(4))
+df_dez = df_dez\
+  .withColumn('DayOfMonth', dayofmonth(df_dez.datetimes))
+df_dez = df_dez\
+  .withColumn("DayToJoin", df_dez.DayOfMonth +1)
+
+df_dist_dez  = df_dez \
+  .groupBy("DayToJoin", window(df_dez.timestamp,"24 hours")) \
+  .agg({'trip_distance': 'mean'}) \
+.withColumnRenamed("avg(trip_distance)", "mean") \
+  .selectExpr("mean as avg_dist_dez", "DayToJoin as day")
+
+# Sommerdaten
+df_juli  = spark.sql("SELECT tpep_pickup_datetime as datetimes, trip_distance FROM yellow_tripdata")
+df_juli = df_juli \
+  .withColumn("Month", month("datetimes")) \
+  .filter(col("Month")==7)
+df_juli = df_juli \
+  .withColumn('DayOfMonth', dayofmonth(df_juli.datetimes))
+
+df_dist_juli  = df_juli \
+  .groupBy("DayOfMonth") \
+  .agg({'trip_distance': 'mean'}) \
+.withColumnRenamed("avg(trip_distance)", "mean") \
+  .selectExpr("mean as avg_dist_juli", "DayOfMonth as day")
+
+# Join Operation
+df_dist_all = df_dist_dez.join(df_dist_juli, df_dist_dez.day == df_dist_juli.day)
+
+writer4 = df_dist_all \
+  .writeStream \
+  .queryName("mi6xc_taxi4") \
+  .outputMode("complete") \
+  .format("memory")
+
+query4 = writer4.start()
+```
+
+Als Output bekommen wir dann:
+
+![image](res/fig2e_00.png)
+
+Neben Tagen, die generell etwas höheres Aufkommen haben, fallen Ausreißer auf. Da die Daten nicht bereinigt sind, könnte dies auf Rauschen zurückführbar sein. Schauen wir in die Daten
+
+```sql
+SELECT * FROM yellow_tripdata where trip_distance > 200
+```
+
+So finden wir einige Ausreißer und ein paar absurd hohe Werte, was so viel bedeutet wie, dass in der Distanz einiges an Rauschen enthalten ist. Dies könnten defente Taxiuhren sein, die zu spät oder gar nicht gestoppt wurdern oder einfach einen Fehler bei der Datenübertragen hatten.
+Es ist durchaus anzunehmen, dass es Kunden gibt, die auch weite Strecken mit dem Taxi nehmen, aber schaut man sich die Daten an, so kann man sagen, dass eine Fahrtstrecke von über 100km äußerst unwahrscheinlich ist. Also filtern wir diese heraus.
+
+```python
+df_dez = df_dez\
+  .withColumn("DayToJoin", df_dez.DayOfMonth +1) \
+  .filter(col("trip_distance") <= 100)
+
+df_juli = df_juli \
+  .withColumn('DayOfMonth', dayofmonth(df_juli.datetimes)) \
+  .filter(col("trip_distance") <= 100)
+```
+
+Damit erhalten wir als neuen Output:
+
+![image](res/fig2e_01.png)

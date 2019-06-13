@@ -132,7 +132,7 @@ Zunächst prüfen wir wieder über ssh, ob wir als `Subscriber` die Taxidaten ei
 
 Das hat soweit geklappt. Jetzt übertragen wir diesen Stream auf Spark mit folgenden Optionen:
 
-![image](res/fig3_2_c.png)
+![image](res/fig2_2_c.png)
 
 Da die Datenpunkte hier zeilenweise als Strings in den Stream fließen, müssen wir die entsprechenden Zeilen, in denen die Daten wiederum kommasepariert sind, mit einem `split`-Befehl aufteilen. Da uns zunächst "nur" die Timestamps interessieren, selektieren wir hier nur das zweite Element aus dem gespliteten Datenpunkt. Anschließend nutzen wir aus, dass die Funktion `dayofmonth` auch String-Datentypen als input akzeptiert und wir mittels dieser Funktion wieder den Monatstag extrahieren können.  Damit die Wochentage übereinstimmen, wollen wir im Folgenden den Mittwoch, 1. Juli (`Data at Rest`) mit Mittwoch, dem 2. Dezember (`Data in Motion`) vergleichen. Dafür generieren wir eine zusätzliche Spalte mit versetztem "Day of Month". 
 

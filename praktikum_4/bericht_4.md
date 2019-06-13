@@ -169,3 +169,5 @@ Anschließend können wir nach dieser Variablen gruppieren und alle möglichen g
 - sum
 
 ![image](res/fig2_2_e.png)
+
+**Anmerkung**: Leider konnten wir, bedingt durch den Umstand des (wahrscheinlich) überlasteten Clusters, keine Datenbereinigung auf den Daten durchführen.

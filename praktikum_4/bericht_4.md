@@ -168,3 +168,4 @@ Anschließend können wir nach dieser Variablen gruppieren und alle möglichen g
 - min
 - sum
 
+![image](res/fig2_2_e.png)
